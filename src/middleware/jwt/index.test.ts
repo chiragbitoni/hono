@@ -58,6 +58,18 @@ describe('JWT', () => {
       expect(handlerExecuted).toBeTruthy()
     })
 
+    it('Should authorize with custom typ header (e.g. at+jwt)', async () => {
+      const credential =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJtZXNzYWdlIjoiaGVsbG8gd29ybGQifQ.InJHM5ErFPOu1p4MZETtS7GUAcDx3vb4EGEPvfmEZIg'
+      const req = new Request('http://localhost/auth/a')
+      req.headers.set('Authorization', `Bearer ${credential}`)
+      const res = await app.request(req)
+      expect(res).not.toBeNull()
+      expect(res.status).toBe(200)
+      expect(await res.json()).toEqual({ message: 'hello world' })
+      expect(handlerExecuted).toBeTruthy()
+    })
+
     it('Should authorize with lowercase bearer scheme', async () => {
       const credential =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXNzYWdlIjoiaGVsbG8gd29ybGQifQ.B54pAqIiLbu170tGQ1rY06Twv__0qSHTA0ioQPIOvFE'

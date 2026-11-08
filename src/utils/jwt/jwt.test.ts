@@ -59,6 +59,15 @@ describe('isTokenHeader', () => {
 
     expect(JWT.isTokenHeader(invalidTokenHeader)).toBe(false)
   })
+
+  it('returns true for other valid typ header values (e.g. RFC 9068 at+jwt)', () => {
+    const validTokenHeader: JWT.TokenHeader = {
+      alg: AlgorithmTypes.HS256,
+      typ: 'at+jwt',
+    }
+
+    expect(JWT.isTokenHeader(validTokenHeader)).toBe(true)
+  })
 })
 
 describe('JWT', () => {
@@ -123,6 +132,16 @@ describe('JWT', () => {
     const tok = `${signingInput}.${encodeBase64Url(signature).replace(/=/g, '')}`
     const err = await JWT.verify(tok, secret, AlgorithmTypes.HS256).catch((e: unknown) => e)
     expect(err).toBeInstanceOf(JwtHeaderInvalid)
+  })
+
+  it('should verify a token with custom typ header (e.g. RFC 9068 at+jwt)', async () => {
+    const secret = 'a-secret'
+    const encode = (s: string) => encodeBase64Url(utf8Encoder.encode(s).buffer).replace(/=/g, '')
+    const signingInput = `${encode('{"alg":"HS256","typ":"at+jwt"}')}.${encode('{"sub":"alice"}')}`
+    const signature = await signing(secret, AlgorithmTypes.HS256, utf8Encoder.encode(signingInput))
+    const tok = `${signingInput}.${encodeBase64Url(signature).replace(/=/g, '')}`
+    const payload = await JWT.verify(tok, secret, AlgorithmTypes.HS256)
+    expect(payload).toEqual({ sub: 'alice' })
   })
 
   it('JwtTokenSignatureMismatched for an empty signature', async () => {
